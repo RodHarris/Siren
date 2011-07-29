@@ -1,0 +1,83 @@
+Siren - README
+
+################################################################################
+#
+# JProject2 (build 292) README for Siren
+#
+# JProject2 Author: Rod Harris
+#
+################################################################################
+
+Author: Rod Harris
+
+Organisation: None
+
+Created: Mon Oct 11 14:07:43 EST 2010
+
+
+jmake script options:
+
+Usage: ./jmake [mode] [optional-args]
+
+where modes include:
+
+compile
+	This will compile the source code and create the executable jar file
+	Siren/bin/siren.jar
+
+	Files in Siren/resource will be included in the jar
+	Files in Siren/copyrights will be included in the jar
+
+	Any dependencies must be in the CLASSPATH, or in the
+	Siren/lib/dependencies.txt file.
+	These dependencies must be found dynamically at compile and run time.
+
+	[optional-args] are passed to the javac process
+
+
+doc
+	run javadoc over src code and place generated html into Siren/javadoc
+
+	[optional-args] are passed to the javadoc process
+
+
+clean
+	removes Siren/javadoc/* [generated documentation]
+	removes Siren/lib/class/* [compiled class files]
+	removes Siren/bin/siren.jar [executable jar file]
+
+	[optional-args] are ignored
+
+
+release
+	make a release snapshot of your project
+
+	requires the 'compiled' jar file
+	jtag must also be in the path
+
+	creates a directory release/build-[#]/
+	creates a directory release/build-[#]/Siren
+
+	copies bin/siren.jar to release/build-[#]/Siren/
+	zips this up in release/build-[#]/Siren-bin.zip
+
+	javadocs the source and jars it up in release/build-[#]/Siren-javadoc.jar
+	
+	cleans the project then tars it up as release/build-[#]/Siren-src.tar.gz
+
+
+branch
+
+	jtag must be in the path
+
+	allows you to branch your source code
+	makes a copy of src and resource in branch/src-[#]
+
+
+**) the compiling stage tries to tag the source code - if you don't have the
+jtag executable it may complain, but it will still build the code, but the
+siren.LibSiren.BUILD variable won't be incremented and 
+siren.LibSiren.BUILD_TIME won'tbe updated
+
+
+

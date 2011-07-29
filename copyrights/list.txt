@@ -1,0 +1,4 @@
+Siren : Siren-COPYRIGHT : ./site.html
+JUnit : JUnit-LICENCE.txt : http://www.junit.org/
+Jsi3 : Jsi3-LICENCE.txt : http://drifter.anu.edu.au/projects/Jsi3/site.html
+

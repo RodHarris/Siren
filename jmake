@@ -1,0 +1,293 @@
+#!/bin/sh
+
+################################################################################
+#
+# JProject2 (build 316) 'Makefile' for Siren
+#
+# JProject2 Author: Rod Harris
+#
+# Siren Author: Rod Harris
+#
+################################################################################
+
+PROJECT="Siren"
+
+MAIN_CLASS="LibSiren"
+
+EXE_NAME="siren"
+
+JAR_NAME="siren.jar"
+
+PKG_NAME="siren"
+
+PKG_DIR="siren"
+
+APPDIR=`pwd`
+
+IDIR="$HOME"
+
+ILIB="$IDIR/lib"
+
+LIB_DIRS="../lib:$HOME/lib:/usr/local/lib"
+
+
+usage()
+{
+    echo "Usage: $0 {compile|doc|clean|branch|release}"
+    exit 1
+}
+
+
+if [ $# -gt 0 ]
+then
+	ACTION=$1
+	shift
+	ARGS="$*"
+
+else
+	usage
+fi
+
+
+clean()
+{
+	echo "Cleaning project directory"
+
+	rm -rvf javadoc/*
+
+	rm -rvf lib/class/*
+
+	rm -vf bin/$JAR_NAME
+}
+
+
+clean_last()
+{
+	echo "Removing old files"
+
+	rm -rf lib/class/*
+
+	rm -f bin/$JAR_NAME
+}
+
+
+find_src_files()
+{
+	JAVA_FILES=`find src -name "*.java"`
+}
+
+
+add_jars()
+{
+	echo 'resolving dependencies'
+
+	while read dep
+	do
+		#echo $dep
+		
+		if [ -z $dep ]
+		then 
+			#echo "skipping blank line"
+			
+			continue
+		fi
+		
+		found=0
+		
+		for lib_dir in $(echo $LIB_DIRS | tr ":" "\n")
+		do
+
+			jar_path=$lib_dir/$dep
+			
+			#echo "checking $jar_path"
+			
+			if [ -f "$jar_path" ]
+			then
+				found=1
+				
+				#echo "adding dependency: $jar_path"
+				
+				#CP=$CP:"$jar_path"
+				
+				CP=$CP:`readlink -f "$jar_path"`
+				
+				break
+			#else
+				#echo "skipping dependency: $jar_path"
+			fi
+		done
+		
+		if [ $found -eq 0 ]
+		then
+			echo "Couldn't locate dependency: $dep"
+			
+			exit 1
+		fi
+	done < lib/dependencies.txt
+}
+
+
+compile()
+{
+	clean_last
+
+	find_src_files
+
+	add_jars
+
+	tag
+
+	echo 'compiling source'
+
+	if javac $CARGS -d lib/class -classpath "$CP" $ARGS $JAVA_FILES
+	then
+		make_jar
+
+		exit 0
+	else
+		exit 1
+	fi
+}
+
+
+tag()
+{
+	echo 'tagging build'
+
+	if which jtag > /dev/null
+	then
+		jtag src/$PKG_DIR/$MAIN_CLASS.java
+	else
+		echo "jtag not installed... continuing"
+	fi
+}
+
+
+make_jar()
+{
+	echo 'creating executable jar file'
+
+	cp -rv resource/* lib/class/$PKG_DIR/
+	
+	cp -rv copyrights lib/class/$PKG_DIR/
+
+	cd lib/class
+
+	jar -cf ../../bin/$JAR_NAME *
+
+	cd ../../
+
+	jar -i bin/$JAR_NAME
+
+	ls -lh bin/$JAR_NAME
+}
+
+
+doc()
+{
+	add_jars
+
+	echo "Generating Javadoc"
+
+	find_src_files
+
+	javadoc -classpath "$CP" -d javadoc $ARGS $JAVA_FILES
+
+	exit $?
+}
+
+
+release()
+{
+	set -e
+
+	ls bin/$JAR_NAME > /dev/null
+
+	ver=`jtag src/$PKG_DIR/$MAIN_CLASS.java --vo`
+
+	mkdir -pv release/build-$ver/$PROJECT/
+
+	cp -v bin/$JAR_NAME release/build-$ver/$PROJECT/
+
+	cd release/build-$ver
+
+	#jar cvf $PROJECT-bin.jar $PROJECT
+	
+	zip -r $PROJECT-bin $PROJECT
+
+	cd ../..
+
+	./jmake doc
+
+	mv javadoc $PROJECT-javadoc
+
+	jar cvf release/build-$ver/$PROJECT-javadoc.jar $PROJECT-javadoc
+
+	mv $PROJECT-javadoc javadoc
+
+	./jmake clean
+
+	mkdir -p /tmp/jproject2/
+
+	cp -r ../$PROJECT /tmp/jproject2/
+
+	rm -rf /tmp/jproject2/$PROJECT/release
+
+	rm -rf /tmp/jproject2/$PROJECT/branch
+
+	CWD=`pwd`
+
+	cd /tmp/jproject2
+
+	#jar cvf $CWD/release/build-$ver/$PROJECT-src.jar $PROJECT
+	
+	tar czvf $CWD/release/build-$ver/$PROJECT-src.tar.gz $PROJECT
+
+	rm -r $PROJECT
+
+	cd $CWD
+}
+
+
+branch()
+{
+	set -e
+
+	ver=`jtag src/$PKG_DIR/$MAIN_CLASS.java --vo`
+
+	mkdir -pv branch/src-$ver/
+
+	cp -rv src branch/src-$ver/
+
+	cp -rv resource branch/src-$ver/
+}
+
+
+case "$ACTION" in
+	"compile")
+		compile
+	;;
+
+	"doc")
+		doc
+	;;
+
+	"clean")
+		clean
+	;;
+	
+	"release")
+		release
+	;;
+
+	"branch")
+		branch
+	;;
+
+	*)
+		usage
+	;;
+esac
+
+exit 0
+

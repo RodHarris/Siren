@@ -137,6 +137,8 @@ compile()
 
 	tag
 
+	mkdir -p lib/class
+
 	echo 'compiling source'
 
 	if javac $CARGS -d lib/class -classpath "$CP" $ARGS $JAVA_FILES

@@ -12,9 +12,9 @@ import static jsi3.lib.text.Statics.*;
 
 public class LibSiren
 {
-	public static final int BUILD = 218;
+	public static final int BUILD = 220;
 
-	public static final long BUILD_TIME = 1311940161479L;
+	public static final long BUILD_TIME = 1312166578761L;
 	
 	public static String[] args;
 
